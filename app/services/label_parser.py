@@ -10,10 +10,10 @@ _LOT_NOISE_TOKENS = ("PPV", "PPC", "PPH", "ACL", "DOM", "FAB")
 # LOT patterns — ordered by confidence (high to low). Stop at first match.
 LOT_PATTERNS: list[tuple[str, float]] = [
     (r"LOT\s*[:\s]\s*([A-Z]{1,3}\d{3,}[A-Z]?\d*)", 1.0),   # LOT: RN620, LOT: PF1122001
+    (r"LOT\s+(\d{4,}\s?\d*)", 0.8),                          # LOT 251391 1, LOT 24040 51 (before generic)
     (r"LOT\s*[:\s]\s*([A-Z0-9]{4,12})", 1.0),                # LOT: CIX31, LOT: N3661
-    (r"LOT\s+(\d{4,}\s?\d*)", 0.8),                          # LOT 251391 1, LOT 24040 51
-    (r"\bLOT[:\s]+([A-Z0-9\s]{3,15})", 0.6),                 # generic
-    (r"^([A-Z]{1,2}\d{3,}[A-Z]?\d*)\s+\d{2}[/\-]", 0.4),   # K4S598 05/24 without prefix
+    (r"\bLOT[:\s]+([A-Z0-9]{3,15})", 0.6),                   # generic fallback
+    (r"^([A-Z][A-Z0-9]{3,11})\s+\d{2}[/\-]", 0.4),          # K4S598 05/24 without prefix
 ]
 
 # DATE patterns — ordered by confidence (high to low). Stop at first pattern that matches.
@@ -62,10 +62,10 @@ class LabelParser:
         )
 
     def _extract_lot(self, text: str) -> tuple[str | None, float, list[str]]:
-        # Strip lines containing noise tokens before matching
+        # Strip noise-only lines; keep lines that also contain LOT keyword
         lines = [
             line for line in text.splitlines()
-            if not any(tok in line for tok in _LOT_NOISE_TOKENS)
+            if not any(tok in line for tok in _LOT_NOISE_TOKENS) or "LOT" in line
         ]
         clean = "\n".join(lines)
         all_matches: list[str] = []
