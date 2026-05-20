@@ -5,7 +5,10 @@
 *.pem
 *.key
 
-# AI artifacts
+# AI artifacts — never push
+CLAUDE.md
+.claude/
+tasks/
 generated/
 ai-output/
 graph.html
