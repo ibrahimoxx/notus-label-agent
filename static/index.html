@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Notus Label Agent</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; max-width: 480px; margin: auto; padding: 16px; background: #f9fafb; }
+    h1 { font-size: 1.4rem; margin-bottom: 8px; }
+    h2 { font-size: 1rem; margin-top: 24px; }
+    input, button { width: 100%; padding: 12px; font-size: 15px; border-radius: 8px; border: 1px solid #d1d5db; margin: 6px 0; }
+    button { background: #2563eb; color: #fff; border: none; cursor: pointer; font-weight: 600; }
+    button:disabled { background: #93c5fd; cursor: not-allowed; }
+    video { width: 100%; border-radius: 10px; background: #000; display: block; margin: 8px 0; }
+    canvas { display: none; }
+    .result { background: #fff; border: 1px solid #e5e7eb; padding: 14px; border-radius: 10px; margin-top: 14px; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; margin-left: 6px; }
+    .badge-ok { background: #dcfce7; color: #15803d; }
+    .badge-low { background: #fef9c3; color: #92400e; }
+    .warn { color: #b91c1c; font-size: 0.85rem; margin-top: 4px; }
+    .history-item { padding: 8px; border-bottom: 1px solid #f3f4f6; font-size: 0.9rem; }
+    #spinner { display: none; text-align: center; padding: 12px; color: #6b7280; }
+  </style>
+</head>
+<body>
+  <h1>Notus Label Agent</h1>
+  <input id="productName" placeholder="Nom du produit (ex: Doliprane 1000mg)" />
+  <button id="openCam">Ouvrir caméra</button>
+  <video id="video" autoplay playsinline hidden></video>
+  <canvas id="canvas"></canvas>
+  <button id="capture" hidden>Capturer &amp; analyser</button>
+  <div id="spinner">Analyse en cours…</div>
+  <div id="result" class="result" hidden></div>
+  <h2>Derniers scans</h2>
+  <div id="history"></div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+
+    /** Escape user-supplied text before inserting into DOM. */
+    function esc(str) {
+      const d = document.createElement('div');
+      d.textContent = str ?? '—';
+      return d.textContent;
+    }
+
+    /** Build result card using safe DOM methods only. */
+    function renderResult(data) {
+      const box = $('result');
+      box.textContent = '';
+
+      const conf = (data.confidence_global * 100).toFixed(0);
+      const badgeClass = data.confidence_global >= 0.6 ? 'badge-ok' : 'badge-low';
+
+      const nameEl = document.createElement('strong');
+      nameEl.textContent = data.product_name ?? '';
+      box.appendChild(nameEl);
+
+      const badge = document.createElement('span');
+      badge.className = `badge ${badgeClass}`;
+      badge.textContent = `${conf}%`;
+      box.appendChild(badge);
+
+      box.appendChild(document.createElement('br'));
+      box.appendChild(document.createElement('br'));
+
+      const addLine = (label, value) => {
+        const p = document.createElement('p');
+        p.style.margin = '4px 0';
+        const b = document.createElement('b');
+        b.textContent = value ?? '—';
+        p.textContent = label + ' ';
+        p.appendChild(b);
+        box.appendChild(p);
+      };
+
+      addLine('LOT :', data.lot_number);
+      addLine('Expiration :', data.expiration_date);
+
+      const meta = document.createElement('small');
+      meta.textContent = `${esc(data.engine_used)} · ${data.processing_time_ms}ms`;
+      box.appendChild(meta);
+
+      (data.warnings ?? []).forEach(w => {
+        const d = document.createElement('div');
+        d.className = 'warn';
+        d.textContent = `⚠ ${w}`;
+        box.appendChild(d);
+      });
+
+      box.hidden = false;
+    }
+
+    /** Build history list using safe DOM methods. */
+    function renderHistory(list) {
+      const el = $('history');
+      el.textContent = '';
+      if (!list.length) {
+        const empty = document.createElement('div');
+        empty.className = 'history-item';
+        empty.style.color = '#9ca3af';
+        empty.textContent = 'Aucun scan enregistré';
+        el.appendChild(empty);
+        return;
+      }
+      list.forEach(b => {
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        item.textContent = `${b.lot_number} — ${b.expiration_date}`;
+        el.appendChild(item);
+      });
+    }
+
+    async function loadHistory() {
+      try {
+        const res = await fetch('/api/batches?limit=10');
+        renderHistory(await res.json());
+      } catch (_) {}
+    }
+
+    $('openCam').onclick = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        $('video').srcObject = stream;
+        $('video').hidden = false;
+        $('capture').hidden = false;
+        $('openCam').textContent = 'Fermer caméra';
+        $('openCam').onclick = () => {
+          stream.getTracks().forEach(t => t.stop());
+          location.reload();
+        };
+      } catch (e) {
+        alert('Caméra inaccessible: ' + e.message);
+      }
+    };
+
+    $('capture').onclick = async () => {
+      const v = $('video'), c = $('canvas');
+      c.width = v.videoWidth;
+      c.height = v.videoHeight;
+      c.getContext('2d').drawImage(v, 0, 0);
+      const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.9));
+
+      $('capture').disabled = true;
+      $('spinner').style.display = 'block';
+      $('result').hidden = true;
+
+      try {
+        const fd = new FormData();
+        fd.append('image', blob, 'scan.jpeg');
+        fd.append('product_name', $('productName').value || 'Inconnu');
+        const res = await fetch('/api/analyze', { method: 'POST', body: fd });
+        renderResult(await res.json());
+        loadHistory();
+      } catch (e) {
+        $('result').textContent = `Erreur: ${e.message}`;
+        $('result').hidden = false;
+      } finally {
+        $('capture').disabled = false;
+        $('spinner').style.display = 'none';
+      }
+    };
+
+    loadHistory();
+  </script>
+</body>
+</html>

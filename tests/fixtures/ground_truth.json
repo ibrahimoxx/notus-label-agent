@@ -1,0 +1,56 @@
+[
+  {
+    "image": "lot_001_white_cap.jpeg",
+    "expected": {"lot": "PF1122001", "expiration_date": "2025-10"},
+    "difficulty": "medium",
+    "notes": "texte gravé relief sur couvercle blanc, PER: 10/2025"
+  },
+  {
+    "image": "lot_002_barcode_box.jpeg",
+    "expected": {"lot": "K4S598", "expiration_date": "2027-05"},
+    "difficulty": "hard",
+    "notes": "LOT sans préfixe, ACL à ignorer, barcode bruit, EXP 05/27"
+  },
+  {
+    "image": "lot_003_embossed.jpeg",
+    "expected": {"lot": "251391 1", "expiration_date": "2028-04"},
+    "difficulty": "hard",
+    "notes": "embossé faible contraste fond blanc, PPV 33 40 à ignorer, EXP 04 2028"
+  },
+  {
+    "image": "lot_004_yellow_box.jpeg",
+    "expected": {"lot": "N3661", "expiration_date": "2027-10"},
+    "difficulty": "easy",
+    "notes": "fond jaune bon contraste, PPV à ignorer, PER: 10/27, LOT: N3661"
+  },
+  {
+    "image": "lot_005_melatonine.jpeg",
+    "expected": {"lot": "24040 51", "expiration_date": "2027-04"},
+    "difficulty": "easy",
+    "notes": "Mélatonine 1.9mg Laprophan, CE:N° à ignorer, EXP 04/2027 LOT 24040 51"
+  },
+  {
+    "image": "lot_006_red_label.jpeg",
+    "expected": {"lot": "CIX31", "expiration_date": "2025-07"},
+    "difficulty": "medium",
+    "notes": "étiquette collée fond rouge, PPC: 139.00 DH à ignorer, Lot: CIX31, hourglass 07/25"
+  },
+  {
+    "image": "lot_007_qrcode.jpeg",
+    "expected": {"lot": "2713076", "expiration_date": "2025-08"},
+    "difficulty": "medium",
+    "notes": "QR code + barcode numérique à ignorer, 08-2025, LOT 2713076"
+  },
+  {
+    "image": "lot_008_arabic.jpeg",
+    "expected": {"lot": "RN620", "expiration_date": "2026-10"},
+    "difficulty": "hard",
+    "notes": "étiquette rouge bilingue arabe/français, DOM: 10 2023 à ignorer, EXP: 10 2026"
+  },
+  {
+    "image": "lot_009_white_box.jpeg",
+    "expected": {"lot": "2JV0951", "expiration_date": "2025-09"},
+    "difficulty": "easy",
+    "notes": "boîte blanche, LOT: 2JV0951, EXP: 09-2025, FAB: 10-2022 à ignorer"
+  }
+]
