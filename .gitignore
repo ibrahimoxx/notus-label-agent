@@ -1,0 +1,46 @@
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# AI artifacts
+generated/
+ai-output/
+graph.html
+graphify-out/
+benchmark_report.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Uploads (user scans — never commit)
+uploads/
+
+# Alembic SQLite dev artifacts
+*.db
+*.sqlite3
+
+# Docker
+.dockerenv
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
