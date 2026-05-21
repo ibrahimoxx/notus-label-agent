@@ -14,6 +14,7 @@ LOT_PATTERNS: list[tuple[str, float]] = [
     (r"LOT\s*[:\s]\s*([A-Z0-9]{4,12})", 1.0),                # LOT: CIX31, LOT: N3661
     (r"\bLOT[:\s]+([A-Z0-9]{3,15})", 0.6),                   # generic fallback
     (r"^([A-Z][A-Z0-9]{3,11})\s+\d{2}[/\-]", 0.4),          # K4S598 05/24 without prefix
+    (r"\b([A-Z]?\d{4,6}):\s", 0.3),                          # 3661: — OCR dropped letter prefix
 ]
 
 # DATE patterns — ordered by confidence (high to low). Stop at first pattern that matches.
